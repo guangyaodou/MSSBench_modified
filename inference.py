@@ -24,8 +24,8 @@ mllm_to_module = {
 # args
 parser = argparse.ArgumentParser()
 parser.add_argument("--mllm", type=str, default="llava", choices=mllm_to_module.keys())
-parser.add_argument("--data_root", type=str, default='/Users/xinyuandou/Desktop/MSSBench_modified/mssbench')
-parser.add_argument("--output_dir", type=str, default='/Users/xinyuandou/Desktop/MSSBench_modified/output')
+parser.add_argument("--data_root", type=str, default='/root/to/mssbench')
+parser.add_argument("--output_dir", type=str, default='/root/to/new_outputs')  
 args = parser.parse_args()
 
 # Dynamic import based on mllm argument
