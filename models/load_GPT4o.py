@@ -12,10 +12,10 @@ import base64
 from io import BytesIO
 
 # Set OpenAI API Key from environment variable
-openai_api_key = os.getenv("OPENAI_API_KEY_CCB")
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # OpenAI model name (corresponds to Azure's "deployment_name")
-model_name = "gpt-4"  # Or whatever model you're using (adjust if needed)
+model_name = "gpt-4o-mini"  # Or whatever model you're using (adjust if needed)
 
 # Base URL for OpenAI (direct)
 openai_api_base = "https://api.openai.com/v1"

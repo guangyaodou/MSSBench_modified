@@ -30,7 +30,7 @@ import requests
 #     return response['choices'][0]['message']['content']
 
 # Load API key from environment variable
-openai_api_key = os.getenv("OPENAI_API_KEY_CCB")
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # def llm(prompt):
 #     headers = {

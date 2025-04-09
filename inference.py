@@ -24,8 +24,8 @@ mllm_to_module = {
 # args
 parser = argparse.ArgumentParser()
 parser.add_argument("--mllm", type=str, default="llava", choices=mllm_to_module.keys())
-parser.add_argument("--data_root", type=str, default='/root/to/mssbench')
-parser.add_argument("--output_dir", type=str, default='/root/to/new_outputs')  
+parser.add_argument("--data_root", type=str, default='/nlpgpu/data/gydou/MSSBench_modified/mssbench')
+parser.add_argument("--output_dir", type=str, default='/nlpgpu/data/gydou/MSSBench_modified/output')
 args = parser.parse_args()
 
 # Dynamic import based on mllm argument
@@ -33,7 +33,7 @@ module_name = f"models.{mllm_to_module[args.mllm]}"
 model_module = importlib.import_module(module_name)
 globals().update(vars(model_module))
 
-val_data = json.load(open(os.path.join(args.data_root, "combined.json"), 'r'))
+val_data = json.load(open(os.path.join(args.data_root, "combined_test.json"), 'r'))
 
 # c_safe_acc, c_unsafe_acc, c_total_acc, e_safe_acc, e_unsafe_acc, e_total_acc = \
 #     test_each_mss(val_data, call_model, args.data_root, output_path=os.path.join(args.output_dir, f"{args.mllm}_mssbench.json"))
