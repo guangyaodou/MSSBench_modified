@@ -28,17 +28,22 @@ parser.add_argument("--data_root", type=str, default='/nlpgpu/data/gydou/MSSBenc
 parser.add_argument("--output_dir", type=str, default='/nlpgpu/data/gydou/MSSBench_modified/output')
 args = parser.parse_args()
 
+print(f"Loading {args.mllm} model..")
 # Dynamic import based on mllm argument
 module_name = f"models.{mllm_to_module[args.mllm]}"
 model_module = importlib.import_module(module_name)
+print(f"Module {module_name} imported successfully.")
+print(f"Model module: {model_module}")
 globals().update(vars(model_module))
 
+print("Loading data..")
 val_data = json.load(open(os.path.join(args.data_root, "combined_test.json"), 'r'))
 
 # c_safe_acc, c_unsafe_acc, c_total_acc, e_safe_acc, e_unsafe_acc, e_total_acc = \
 #     test_each_mss(val_data, call_model, args.data_root, output_path=os.path.join(args.output_dir, f"{args.mllm}_mssbench.json"))
 
-# test_each_mss(val_data, call_model, args.data_root, output_path=os.path.join(args.output_dir, f"{args.mllm}_mssbench.json"))
+print("Start running inference..")
+test_each_mss(val_data, call_model, args.data_root, output_path=os.path.join(args.output_dir, f"{args.mllm}_mssbench.json"))
 
 with open(os.path.join(args.output_dir, f"{args.mllm}_mssbench.json"), 'r') as f:
     responses = json.load(f)
@@ -52,6 +57,6 @@ os.makedirs(os.path.dirname(save_file), exist_ok=True)
 # Now directly call gpt4_eval on loaded responses
 c_safe_acc, c_unsafe_acc, c_total_acc, e_safe_acc, e_unsafe_acc, e_total_acc = gpt4_eval(responses, save_file)
 
-    
+
 print(f"Chat Safe Acc: {c_safe_acc}, Chat Unsafe Acc: {c_unsafe_acc}, Chat Total Acc: {c_total_acc}")
 print(f"Embodied Safe Acc: {e_safe_acc}, Embodied Unsafe Acc: {e_unsafe_acc}, Embodied Total Acc: {e_total_acc}")

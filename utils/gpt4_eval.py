@@ -55,7 +55,7 @@ client = OpenAI(api_key=openai_api_key)
 def llm(prompt):
     try:
         response = client.chat.completions.create(
-            model="gpt-4",  # Or "gpt-4o", "gpt-4-turbo", etc.
+            model="gpt-4o-mini",  # Or "gpt-4o", "gpt-4-turbo", etc.
             messages=[{
                 "role": "user",
                 "content": prompt
@@ -170,39 +170,39 @@ def gpt4_eval(responses, save_file):
         })
         with open(save_file, "w") as f:
             json.dump(evals, f, indent=4)
-            
-    for res in tqdm.tqdm(responses['embodied']):
-        prompt_str_unsafe = prompt_embodied['prompt_template'].format(
-            prompt1=prompt_embodied['prompt1'],
-            response=res["unsafe_output"].split('Response to instruction:')[-1],
-            prompt2=prompt_embodied['prompt2'].format(rubric=construct_rubric('do_not_answer', annotation_aspects_embodied)),
-        )
-        prompt_str_safe = prompt_embodied['prompt_template'].format(
-            prompt1=prompt_embodied['prompt1'],
-            response=res["safe_output"].split('Response to instruction:')[-1],
-            prompt2=prompt_embodied['prompt2'].format(rubric=construct_rubric('do_not_answer', annotation_aspects_embodied)),
-        )
-        try:
-            eval_safe = llm(prompt_str_safe)
-            eval_unsafe = llm(prompt_str_unsafe)
-        except:
-            print('wrong with eval')
-            continue
-        
-        evals.append({
-            "scenario": 'embodied',
-            "eval_safe": eval_safe,
-            "eval_unsafe": eval_unsafe,
-            "safe_img": res['safe_img'],
-            "unsafe_img": res['unsafe_img'],
-            # "task": res["task"],
-            "safe_response": res['safe_output'].split('Response to instruction:')[-1], 
-            "unsafe_response": res['unsafe_output'].split('Response to instruction:')[-1],
-            "label_safe": parse_labels([eval_safe])[-1],
-            "label_unsafe": parse_labels([eval_unsafe])[-1],
-        })
-        with open(save_file, "w") as f:
-            json.dump(evals, f, indent=4)
+
+    # for res in tqdm.tqdm(responses['embodied']):
+    #     prompt_str_unsafe = prompt_embodied['prompt_template'].format(
+    #         prompt1=prompt_embodied['prompt1'],
+    #         response=res["unsafe_output"].split('Response to instruction:')[-1],
+    #         prompt2=prompt_embodied['prompt2'].format(rubric=construct_rubric('do_not_answer', annotation_aspects_embodied)),
+    #     )
+    #     prompt_str_safe = prompt_embodied['prompt_template'].format(
+    #         prompt1=prompt_embodied['prompt1'],
+    #         response=res["safe_output"].split('Response to instruction:')[-1],
+    #         prompt2=prompt_embodied['prompt2'].format(rubric=construct_rubric('do_not_answer', annotation_aspects_embodied)),
+    #     )
+    #     try:
+    #         eval_safe = llm(prompt_str_safe)
+    #         eval_unsafe = llm(prompt_str_unsafe)
+    #     except:
+    #         print('wrong with eval')
+    #         continue
+    #
+    #     evals.append({
+    #         "scenario": 'embodied',
+    #         "eval_safe": eval_safe,
+    #         "eval_unsafe": eval_unsafe,
+    #         "safe_img": res['safe_img'],
+    #         "unsafe_img": res['unsafe_img'],
+    #         # "task": res["task"],
+    #         "safe_response": res['safe_output'].split('Response to instruction:')[-1],
+    #         "unsafe_response": res['unsafe_output'].split('Response to instruction:')[-1],
+    #         "label_safe": parse_labels([eval_safe])[-1],
+    #         "label_unsafe": parse_labels([eval_unsafe])[-1],
+    #     })
+    #     with open(save_file, "w") as f:
+    #         json.dump(evals, f, indent=4)
     
     chat_safe_correct = 0
     chat_unsafe_correct = 0

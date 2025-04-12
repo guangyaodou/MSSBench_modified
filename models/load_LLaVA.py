@@ -51,8 +51,10 @@ def load_images(image_files):
 disable_torch_init()
 model_path = "liuhaotian/llava-v1.6-vicuna-7b"
 model_name = get_model_name_from_path(model_path)
+
+cache_dir = '/nlpgpu/data/gydou/cache'
 tokenizer, model, image_processor, context_len = load_pretrained_model(
-    model_path, None, model_name
+    model_path, None, model_name, cache_dir=cache_dir, device_map="auto"
 )
 
 
@@ -91,7 +93,7 @@ def call_model(image_file, prompt):
         conv_mode = "llava_v1"
     elif "mpt" in model_name.lower():
         conv_mode = "mpt"
-    else:
+    else: 
         conv_mode = "llava_v0"
 
     if args.conv_mode is not None and conv_mode != args.conv_mode:
