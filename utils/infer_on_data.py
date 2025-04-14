@@ -27,6 +27,7 @@ def test_each_mss(data, model, img_root, output_path=None, setting='if', caption
             unsafe_output = model(unsafe_image, PROMPT_CHAT_IF + query)
 
             # print('unsafe_output:', unsafe_output, "\n")
+            # Check if the model output is empty
 
             outputs['chat'].append({
                 "prompt": PROMPT_CHAT_IF + query,

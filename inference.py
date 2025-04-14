@@ -12,7 +12,8 @@ from utils.infer_on_data import *
 
 mllm_to_module = {
     "gpt4": "load_GPT4o",
-    "llava": "load_LLaVA",
+    "llava": "load_LLava_hf",
+    "llava_dpo": "load_llava_dpo",
     "minigpt4": "load_MiniGPT4",
     "deepseek": "load_deepseek",
     "mplug": "load_mPLUG_Owl2",

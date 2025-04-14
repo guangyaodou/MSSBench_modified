@@ -1,3 +1,6 @@
+import os
+import torch
+import wandb
 from datasets import load_dataset
 from peft import LoraConfig
 from transformers import AutoModelForVision2Seq, AutoProcessor, LlavaForConditionalGeneration
@@ -13,16 +16,14 @@ from trl import (
     DPOConfig,
     DPOTrainer,
 )
-from llava.model.builder import load_pretrained_model
-from llava.utils import disable_torch_init
-from llava.mm_utils import (
-    get_model_name_from_path,
-)
 
 quantization_config = BitsAndBytesConfig(
-    load_in_4bit=True,
+    load_in_8bit=True,
+    # load_in_4bit=True,
+    # bnb_4bit_use_double_quant=True,
+    # bnb_4bit_quant_type="nf4",
+    # bnb_4bit_compute_dtype=torch.bfloat16
 )
-
 
 lora_config = LoraConfig(
     r=16,
@@ -30,45 +31,59 @@ lora_config = LoraConfig(
     inference_mode=False,
     lora_dropout=0.01,
     bias="none",
-    target_modules=["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    target_modules=['q_proj', 'v_proj', 'k_proj', 'o_proj'],
     task_type="CAUSAL_LM"
 )
 
-disable_torch_init()
-model_path = "liuhaotian/llava-v1.6-vicuna-7b"
-model_name = get_model_name_from_path(model_path)
-
+model_path = "llava-hf/llava-1.5-7b-hf"
 cache_dir = '/nlpgpu/data/gydou/cache'
+
+wandb.init(
+    project="llava-dpo",
+    name="llava-dpo-10epochs",
+    config={
+        "model_path": model_path,
+        "epochs": 10,
+        "learning_rate": 5e-5,
+        "batch_size": 2,
+        "gradient_accumulation_steps": 32,
+        "beta": 0.1,
+        "lora_r": 16,
+        "lora_alpha": 32,
+        "fp16": True,
+    }
+)
+
+local_rank = int(os.environ.get("LOCAL_RANK", 0))
+device_map = {"": local_rank}
+print("device_map", device_map)
+
 model=LlavaForConditionalGeneration.from_pretrained(
     model_path,
     cache_dir=cache_dir,
-    device_map="auto",
+    # device_map="balanced",
+    device_map=local_rank,
     quantization_config=quantization_config,
-    torch_dtype="auto",
+    torch_dtype=torch.float16,
     trust_remote_code=True,
 )
 
-ref_model=LlavaForConditionalGeneration.from_pretrained(
-    model_path,
-    cache_dir=cache_dir,
-    device_map="auto",
-    quantization_config=quantization_config,
-    torch_dtype="auto",
-    trust_remote_code=True,
-)
+if lora_config is None:
+    ref_model=LlavaForConditionalGeneration.from_pretrained(
+        model_path,
+        cache_dir=cache_dir,
+        device_map="auto",
+        quantization_config=quantization_config,
+        torch_dtype="auto",
+        trust_remote_code=True,
+    )
+else:
+    ref_model=None
 
 processor = AutoProcessor.from_pretrained(
     model_path, trust_remote_code=True, do_image_splitting=False
 )
 tokenizer = processor.tokenizer
-
-# tokenizer, model, processor, context_len = load_pretrained_model(
-#     model_path, None, model_name, cache_dir=cache_dir, device_map="auto", quantization_config=quantization_config,
-# )
-#
-# _, ref_model, _, _ = load_pretrained_model(
-#     model_path, None, model_name, cache_dir=cache_dir, device_map="auto", quantization_config=quantization_config,
-# )
 
 print("loading model done")
 
@@ -85,18 +100,27 @@ if tokenizer.pad_token is None:
 train_dataset = load_dataset("gydou/mssbench_dpo", split="train")
 val_dataset = load_dataset("gydou/mssbench_dpo", split="test")
 
-training_args = DPOConfig(output_dir="/nlpgpu/data/gydou/output/Llava_DPO",
+output_dir = "/nlpgpu/data/gydou/output/Llava_DPO_epoch_10"
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+
+training_args = DPOConfig(output_dir=output_dir,
+                          beta=0.1,
                           logging_steps=10,
-                          per_device_train_batch_size=4,
-                          num_train_epochs=5,
+                          dataset_num_proc=32,
+                          per_device_train_batch_size=2,
+                          gradient_checkpointing=False,
+                          num_train_epochs=10,
                           save_steps=100,
                           learning_rate=5e-5,
-                          fp16=True
+                          gradient_accumulation_steps =32,
+                          fp16=True,
+                          report_to="wandb",
                           )
 
 trainer = DPOTrainer(
     model,
-    ref_model,
+    ref_model=ref_model,
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=val_dataset,
@@ -106,5 +130,9 @@ trainer = DPOTrainer(
 
 trainer.train()
 
-# Save and push to hub
-trainer.save_model("/nlpgpu/data/gydou/cache/llava_dpo")
+save_dir = "/nlpgpu/data/gydou/cache/llava_dpo_10"
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir, exist_ok=True)
+trainer.save_model(save_dir)
+wandb.log({"final_loss": trainer.state.loss})
+wandb.finish()
