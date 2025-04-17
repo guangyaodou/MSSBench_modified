@@ -12,6 +12,7 @@ from utils.infer_on_data import *
 
 mllm_to_module = {
     "gpt4": "load_GPT4o",
+    "gpt4_multiagent": "load_GPT4_multiagent",
     "llava": "load_LLava_hf",
     "llava_dpo": "load_llava_dpo",
     "minigpt4": "load_MiniGPT4",
@@ -22,11 +23,13 @@ mllm_to_module = {
     "claude": "load_claude",
 }
 
+local_dir = '/Users/hc.y/Documents/GitHub/MSSBench_modified'
+
 # args
 parser = argparse.ArgumentParser()
-parser.add_argument("--mllm", type=str, default="llava", choices=mllm_to_module.keys())
-parser.add_argument("--data_root", type=str, default='/nlpgpu/data/gydou/MSSBench_modified/mssbench')
-parser.add_argument("--output_dir", type=str, default='/nlpgpu/data/gydou/MSSBench_modified/output')
+parser.add_argument("--mllm", type=str, default="load_GPT4_multiagent", choices=mllm_to_module.keys())
+parser.add_argument("--data_root", type=str, default=f'{local_dir}/mssbench')
+parser.add_argument("--output_dir", type=str, default=f'{local_dir}/output')
 args = parser.parse_args()
 
 print(f"Loading {args.mllm} model..")
