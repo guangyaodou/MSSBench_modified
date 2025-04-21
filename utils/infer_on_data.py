@@ -49,7 +49,7 @@ def test_each_mss(data, model, img_root, output_path=None, setting='if', caption
     #     print("Running Iteration (embodied)", i)
     #     safe_image = os.path.join(img_root, "embodied", d['safe'])
     #     unsafe_image = os.path.join(img_root, "embodied", d['unsafe'])
-    #     for safe_instr, unsafe_instr in zip(d["safe_instructions"], d["unsafe_instructions"]):
+    #    o for safe_instr, unsafe_instr in zip(d["safe_instructions"], d["unsafe_instructions"]):
     #         safe_output = model(safe_image, PROMPT_EMBODIED_IF + safe_instr)
     #         unsafe_output = model(unsafe_image, PROMPT_EMBODIED_IF + unsafe_instr)
     #
